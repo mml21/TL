@@ -11,6 +11,7 @@ namespace AddressProcessing.CSV
         1) This class does too much, breaking the Single Responsability Principle (SRP). 
            This is immediately obvious just from the name used for this class. 
            It would be cleaner and more maintainable to split this class into two CSVReader and CSVWriter classes.
+           As it is, it can lead to inconsistencies, e.g. opening the file for reading and then trying to write or the other way around.
         2) This class should implement the IDisposable interface to clean up the file stream/s (_readerStream and _writerStream).
            This will enable it to be used within a Using statement, preventing the users of it from forgetting to call the Close method.
         3) There are two Read public methods which look almost identical (breaks DRY, too much code duplication), 
