@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace AddressProcessing.CSV
 {
@@ -10,132 +9,71 @@ namespace AddressProcessing.CSV
 
     public class CSVReaderWriter
     {
-        private StreamReader _readerStream = null;
-        private StreamWriter _writerStream = null;
+        private CSVReader _csvReader;
+        private CSVWriter _csvWriter;
 
         [Flags]
         public enum Mode { Read = 1, Write = 2 };
+    
+        public CSVReaderWriter()
+        {
+            _csvReader = new CSVReader();
+            _csvWriter = new CSVWriter();
+        }
 
         public void Open(string fileName, Mode mode)
         {
             if (mode == Mode.Read)
             {
-                _readerStream = File.OpenText(fileName);
+                _csvReader.Open(fileName);
             }
             else if (mode == Mode.Write)
             {
-                FileInfo fileInfo = new FileInfo(fileName);
-                _writerStream = fileInfo.CreateText();
+                _csvWriter.Open(fileName);
             }
             else
             {
+                // We keep this for backwards compatibility but this means
+                // that the mode can never be used as an enum flags, e.g. to both 
+                // read and write the file
                 throw new Exception("Unknown file mode for " + fileName);
             }
         }
 
         public void Write(params string[] columns)
         {
-            string outPut = "";
+            if (columns == null)
+                throw new ArgumentNullException(nameof(columns));
 
-            for (int i = 0; i < columns.Length; i++)
-            {
-                outPut += columns[i];
-                if ((columns.Length - 1) != i)
-                {
-                    outPut += "\t";
-                }
-            }
-
-            WriteLine(outPut);
+            // TODO: Check that file is opened for writting
+            _csvWriter.Write(columns);
         }
 
+        // For backwards compatibility I've kept this method in case
+        // there are any callers out there using it just to check the
+        // result of this method. Ideally we'd get rid of it completely
+        // and move them to using the next method instead.
         public bool Read(string column1, string column2)
         {
-            const int FIRST_COLUMN = 0;
-            const int SECOND_COLUMN = 1;
-
-            string line;
-            string[] columns;
-
-            char[] separator = { '\t' };
-
-            line = ReadLine();
-            columns = line.Split(separator);
-
-            if (columns.Length == 0)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            }
-            else
-            {
-                column1 = columns[FIRST_COLUMN];
-                column2 = columns[SECOND_COLUMN];
-
-                return true;
-            }
+            return Read(out column1, out column2);
         }
 
         public bool Read(out string column1, out string column2)
         {
-            const int FIRST_COLUMN = 0;
-            const int SECOND_COLUMN = 1;
-
-            string line;
-            string[] columns;
-
-            char[] separator = { '\t' };
-
-            line = ReadLine();
-
-            if (line == null)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            }
-
-            columns = line.Split(separator);
-
-            if (columns.Length == 0)
-            {
-                column1 = null;
-                column2 = null;
-
-                return false;
-            } 
-            else
-            {
-                column1 = columns[FIRST_COLUMN];
-                column2 = columns[SECOND_COLUMN];
-
-                return true;
-            }
-        }
-
-        private void WriteLine(string line)
-        {
-            _writerStream.WriteLine(line);
-        }
-
-        private string ReadLine()
-        {
-            return _readerStream.ReadLine();
+            // TODO: Check that file is opened for reading
+            return _csvReader.Read(out column1, out column2);
         }
 
         public void Close()
         {
-            if (_writerStream != null)
+            if (_csvReader != null)
             {
-                _writerStream.Close();
+                _csvReader.Dispose();
             }
 
-            if (_readerStream != null)
+            if (_csvWriter != null)
             {
-                _readerStream.Close();
+                _csvWriter.Dispose();
             }
         }
     }

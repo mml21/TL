@@ -18,7 +18,7 @@ namespace AddressProcessing.CSV
            but crucially one of them assigns values to input parameters, which won't be visible to the caller.
            In addition this method does no validation on the string returned from the ReadLine private method.
         4) Write methods uses expensive string concatenation (since strings are inmutable a new copy will be created each time 
-           that the string concatenation operator + is used). Would be better to use StringBuffer.
+           that the string concatenation operator + is used). Would be better to use StringBuilder.
         5) Some public methods are missing input/arguments validation for some arguments (e.g. Open, Write). 
            For instance in the Open method, the fileName argument could be null or not corresponding to an existing
            file for reading. This will still throw an exception from the .NET System.IO methods but we could do argument validation ourselves beforehand.
