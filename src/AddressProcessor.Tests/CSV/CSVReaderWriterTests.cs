@@ -9,6 +9,8 @@ namespace Csv.Tests
     {
         private CSVReaderWriter CSVReaderWriter;
         private const string TestInputFile = @"test_data\contacts.csv";
+        private const string TestInputMiniFile = @"test_data\contactsMini.csv";
+        private const string TestInputEmptyFile = @"test_data\emptyContacts.csv";
         private const string TestOutputFile = @"test_data\output.csv";
 
         [SetUp]
@@ -69,15 +71,17 @@ namespace Csv.Tests
             CSVReaderWriter.Open(TestInputFile, CSVReaderWriter.Mode.Read);
             string column1, column2;
 
-            CSVReaderWriter.Read(out column1, out column2);
+            var read = CSVReaderWriter.Read(out column1, out column2);
 
+            Assert.IsTrue(read);
             Assert.IsNotNullOrEmpty(column1);
             Assert.IsNotNullOrEmpty(column2);
             Assert.That(column1.Equals("Shelby Macias"));
             Assert.That(column2.Equals("3027 Lorem St.|Kokomo|Hertfordshire|L9T 3D5|England"));
 
-            CSVReaderWriter.Read(out column1, out column2);
+            read = CSVReaderWriter.Read(out column1, out column2);
 
+            Assert.IsTrue(read);
             Assert.IsNotNullOrEmpty(column1);
             Assert.IsNotNullOrEmpty(column2);
             Assert.That(column1.Equals("Porter Coffey"));
@@ -85,14 +89,41 @@ namespace Csv.Tests
         }
 
         [Test]
-        public void Read_UsingWrongMethod_DoesNotWork()
+        public void ReadFromFile_FileIsEmpty_ReturnsFalse()
+        {
+            CSVReaderWriter.Open(TestInputEmptyFile, CSVReaderWriter.Mode.Read);
+            string column1, column2;
+
+            var read = CSVReaderWriter.Read(out column1, out column2);
+
+            Assert.IsFalse(read);
+            Assert.IsNull(column1);
+            Assert.IsNull(column2);
+        }
+
+        [Test]
+        public void ReadFromFile_LessThanTwoColumns_ReturnsFalse()
+        {
+            CSVReaderWriter.Open(TestInputMiniFile, CSVReaderWriter.Mode.Read);
+            string column1, column2;
+
+            var read = CSVReaderWriter.Read(out column1, out column2);
+
+            Assert.IsFalse(read);
+            Assert.IsNull(column1);
+            Assert.IsNull(column2);
+        }
+
+        [Test]
+        public void Read_UsingWrongMethod_DoesNotReturnReadContents()
         {
             CSVReaderWriter.Open(TestInputFile, CSVReaderWriter.Mode.Read);
             string column1 = string.Empty;
             string column2 = string.Empty;
 
-            CSVReaderWriter.Read(column1, column2);
+            var read = CSVReaderWriter.Read(column1, column2);
 
+            Assert.IsTrue(read);
             Assert.IsEmpty(column1);
             Assert.IsEmpty(column2);
         }
@@ -110,8 +141,9 @@ namespace Csv.Tests
             CSVReaderWriter.Open(TestOutputFile, CSVReaderWriter.Mode.Read);
 
             string column1, column2;
-            CSVReaderWriter.Read(out column1, out column2);
+            var read = CSVReaderWriter.Read(out column1, out column2);
 
+            Assert.IsTrue(read);
             Assert.IsNotNullOrEmpty(column1);
             Assert.IsNotNullOrEmpty(column2);
             Assert.That(column1.Equals(columns[0]));
@@ -125,7 +157,8 @@ namespace Csv.Tests
 
             var columns = new string[] { "Column1", "Column2" };
 
-            var exception = Assert.Throws<NullReferenceException>(() => CSVReaderWriter.Write(columns));
+            var exception = Assert.Throws<Exception>(() => CSVReaderWriter.Write(columns));
+            Assert.AreEqual("Not opened for writing!", exception.Message);
         }
 
         [Test]
@@ -136,8 +169,11 @@ namespace Csv.Tests
             string column1 = string.Empty;
             string column2 = string.Empty;
 
-            Assert.Throws<NullReferenceException>(() => CSVReaderWriter.Read(column1, column2));
-            Assert.Throws<NullReferenceException>(() => CSVReaderWriter.Read(out column1, out column2));
+            var exception = Assert.Throws<Exception>(() => CSVReaderWriter.Read(column1, column2));
+            Assert.AreEqual("Not opened for reading!", exception.Message);
+
+            exception = Assert.Throws<Exception>(() => CSVReaderWriter.Read(out column1, out column2));
+            Assert.AreEqual("Not opened for reading!", exception.Message);
         }
     }
 }

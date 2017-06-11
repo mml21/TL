@@ -63,6 +63,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="test_data\emptyContacts.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="test_data\contactsMini.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="test_data\contacts.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

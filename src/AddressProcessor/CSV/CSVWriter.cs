@@ -6,14 +6,22 @@ namespace AddressProcessing.CSV
 {
     public class CSVWriter : IDisposable
     {
-        private string _fileName;
         private StreamWriter _writerStream = null;
         private const char DEFAULT_SEPARATOR = '\t';
+        private char _separator;
+        public bool IsOpened { get; private set; }
+
+        // This won't break backwards compatibility
+        public CSVWriter(char separator = DEFAULT_SEPARATOR)
+        {
+            _separator = separator;
+        }
 
         public void Open(string fileName)
         {
             FileInfo fileInfo = new FileInfo(fileName);
             _writerStream = fileInfo.CreateText();
+            IsOpened = true;
         }
 
         public void Write(params string[] columns)
@@ -25,11 +33,11 @@ namespace AddressProcessing.CSV
                 sb.Append(columns[i]);
                 if ((columns.Length - 1) != i)
                 {
-                    sb.Append(DEFAULT_SEPARATOR);
+                    sb.Append(_separator);
                 }
             }
 
-            _writerStream.WriteLine(sb.ToString());
+            _writerStream.WriteLine(sb.ToString()); // WriteLineAsync
         }
 
         public void Dispose()
@@ -37,6 +45,7 @@ namespace AddressProcessing.CSV
             if (_writerStream != null)
             {
                 _writerStream.Close();
+                IsOpened = false;
             }
         }
     }

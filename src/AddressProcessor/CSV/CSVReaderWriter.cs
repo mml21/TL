@@ -7,29 +7,38 @@ namespace AddressProcessing.CSV
            Assume this code is in production and backwards compatibility must be maintained.
     */
 
-    public class CSVReaderWriter
+    /// <summary>
+    /// Normally we'd make this kind of I/O operations async using async/await task-based
+    /// methods to avoid blocking on I/O.
+    /// </summary>
+    public class CSVReaderWriter : IDisposable
     {
-        private CSVReader _csvReader;
-        private CSVWriter _csvWriter;
+        private CSVReader _CSVReader;
+        private CSVWriter _CSVWriter;
 
         [Flags]
         public enum Mode { Read = 1, Write = 2 };
     
         public CSVReaderWriter()
         {
-            _csvReader = new CSVReader();
-            _csvWriter = new CSVWriter();
+            _CSVReader = new CSVReader();
+            _CSVWriter = new CSVWriter();
         }
 
+        /// <summary>
+        /// Opens the given file for reading or writing.
+        /// </summary>
+        /// <param name="fileName">The fileName</param>
+        /// <param name="mode">The mode to open the file file (Read or Write) </param>
         public void Open(string fileName, Mode mode)
         {
             if (mode == Mode.Read)
             {
-                _csvReader.Open(fileName);
+                _CSVReader.Open(fileName);
             }
             else if (mode == Mode.Write)
             {
-                _csvWriter.Open(fileName);
+                _CSVWriter.Open(fileName);
             }
             else
             {
@@ -40,41 +49,65 @@ namespace AddressProcessing.CSV
             }
         }
 
+        /// <summary>
+        /// Writes the given columns to the file.
+        /// </summary>
+        /// <param name="columns">The input columns</param>
         public void Write(params string[] columns)
         {
             if (columns == null)
                 throw new ArgumentNullException(nameof(columns));
 
-            // TODO: Check that file is opened for writting
-            _csvWriter.Write(columns);
+            if (!_CSVWriter.IsOpened)
+                throw new Exception("Not opened for writing!");
+
+            _CSVWriter.Write(columns);
         }
 
         // For backwards compatibility I've kept this method in case
-        // there are any callers out there using it just to check the
-        // result of this method. Ideally we'd get rid of it completely
-        // and move them to using the next method instead.
+        // there are any callers out there using it just to check its
+        // result. Ideally we'd get rid of it completely and move callers
+        // to using the next method instead.
         public bool Read(string column1, string column2)
         {
             return Read(out column1, out column2);
         }
 
+        /// <summary>
+        /// Returns true if it read a line, and in this case column1
+        /// and column2 will contain the tab separated lines content.
+        /// Otherwise it returns false.
+        /// </summary>
+        /// <param name="column1"></param>
+        /// <param name="column2"></param>
+        /// <returns></returns>
         public bool Read(out string column1, out string column2)
         {
-            // TODO: Check that file is opened for reading
-            return _csvReader.Read(out column1, out column2);
+            if (!_CSVReader.IsOpened)
+                throw new Exception("Not opened for reading!");
+
+            return _CSVReader.Read(out column1, out column2);
         }
 
+        /// <summary>
+        /// Closes this reader/writer.
+        /// </summary>
         public void Close()
         {
-            if (_csvReader != null)
+            if (_CSVReader != null)
             {
-                _csvReader.Dispose();
+                _CSVReader.Dispose();
             }
 
-            if (_csvWriter != null)
+            if (_CSVWriter != null)
             {
-                _csvWriter.Dispose();
+                _CSVWriter.Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }
